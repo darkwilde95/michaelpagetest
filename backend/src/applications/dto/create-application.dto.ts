@@ -1,45 +1,50 @@
 import {
   IsEnum,
-  IsNotEmpty,
   IsString,
-  IsEmail,
+  IsNotEmpty,
   ValidateIf,
+  IsEmail,
 } from 'class-validator';
-import { Channel, DocumentType } from '../interfaces/application.interface';
+import {
+  CustomerChannel,
+  DocumentType,
+} from '../interfaces/application.interface';
 
 export class CreateApplicationDto {
-  @IsEnum(Channel)
-  channel: Channel;
-
-  @ValidateIf((o) => o.channel === Channel.ASSISTED)
-  @IsNotEmpty({
-    message: 'El ID del asesor es obligatorio cuando el canal es ASISTIDO.',
+  @IsEnum(CustomerChannel, {
+    message: 'El canal debe ser Autogestionado o Asistido',
   })
+  @IsNotEmpty()
+  channel!: CustomerChannel;
+
+  @ValidateIf((o) => o.channel === CustomerChannel.ASSISTED)
   @IsString()
+  @IsNotEmpty({
+    message: 'El id del asesor es requerido para el canal asistido.',
+  })
   advisorId?: string;
 
-  @IsEnum(DocumentType, {
-    message:
-      'El tipo de documento debe ser uno de los siguientes valores: CC, CE, PAS, PPT',
-  })
-  documentType: DocumentType;
-
+  @IsEnum(DocumentType, { message: 'El tipo de documento no es válido' })
   @IsNotEmpty()
-  @IsString()
-  documentNumber: string;
+  documentType!: DocumentType;
 
+  @IsString()
   @IsNotEmpty()
-  @IsString()
-  names: string;
+  documentNumber!: string;
 
+  @IsString()
   @IsNotEmpty()
+  fullName!: string;
+
   @IsString()
-  cellphone: string;
-
-  @IsEmail()
-  email: string;
-
   @IsNotEmpty()
+  phoneNumber!: string;
+
+  @IsEmail({}, { message: 'El formato del correo electrónico no es válido' })
+  @IsNotEmpty()
+  email!: string;
+
   @IsString()
-  city: string;
+  @IsNotEmpty()
+  city!: string;
 }

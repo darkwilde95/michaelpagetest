@@ -1,43 +1,67 @@
 import {
   IsNumber,
-  IsOptional,
   IsString,
   IsBoolean,
+  IsOptional,
   Min,
+  IsEmail,
   IsEnum,
 } from 'class-validator';
-import { ApplicationStep } from '../interfaces/application.interface';
+import { DocumentType } from '../interfaces/application.interface';
 
 export class UpdateApplicationDto {
+  @IsEnum(DocumentType, { message: 'El tipo de documento no es válido' })
   @IsOptional()
-  @IsEnum(ApplicationStep, { message: 'El paso proporcionado no es válido' })
-  lastStepCompleted?: ApplicationStep;
+  documentType?: DocumentType;
 
+  @IsString()
   @IsOptional()
+  documentNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  fullName?: string;
+
+  @IsString()
+  @IsOptional()
+  phoneNumber?: string;
+
+  @IsEmail({}, { message: 'El formato del correo electrónico no es válido' })
+  @IsOptional()
+  email?: string;
+
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  // --- Datos Complementarios y Financieros ---
   @IsNumber()
-  @Min(0)
+  @Min(0, { message: 'Los ingresos no pueden ser negativos' })
+  @IsOptional()
   income?: number;
 
-  @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Min(0, { message: 'Los egresos no pueden ser negativos' })
+  @IsOptional()
   expenses?: number;
 
-  @IsOptional()
   @IsNumber()
-  @Min(1)
+  @Min(0, { message: 'El valor solicitado debe ser mayor a cero' })
+  @IsOptional()
   requestedAmount?: number;
 
-  @IsOptional()
   @IsNumber()
-  @Min(1)
+  @Min(1, { message: 'El plazo mínimo es de 1 mes' })
+  @IsOptional()
   desiredTerm?: number;
 
-  @IsOptional()
   @IsString()
-  creditPurpose?: string;
-
   @IsOptional()
-  @IsBoolean()
-  dataTreatmentAccepted?: boolean;
+  loanPurpose?: string;
+
+  @IsBoolean({
+    message: 'Debe especificar la aceptación de tratamiento de datos',
+  })
+  @IsOptional()
+  dataProcessingAccepted?: boolean;
 }

@@ -1,55 +1,52 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import {
-  Application,
+  IApplication,
   ApplicationStatus,
-  ApplicationEvent,
-  Channel,
-  ApplicationEventType,
-  SimulationResponse,
-  ApplicationStep,
 } from './interfaces/application.interface';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
+import { FilterApplicationsDto } from './dto/filter-applications.dto';
 import { AbandonApplicationDto } from './dto/abandon-application.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { ApplicationAction } from 'src/events/interfaces/event.interface';
+import { EventsService } from 'src/events/events.service';
 
 @Injectable()
 export class ApplicationsService {
-  private applications: Application[] = [];
-  private events: ApplicationEvent[] = [];
+  private applications: IApplication[] = [];
 
-  // POST /applications
-  create(createDto: CreateApplicationDto): Application {
-    const newApplication: Application = {
+  constructor(private readonly eventsService: EventsService) {}
+
+  create(createDto: CreateApplicationDto): IApplication {
+    const newApplication: IApplication = {
       id: uuidv4(),
-      status: ApplicationStatus.DRAFT,
-      lastStepCompleted: ApplicationStep.INITIAL,
       ...createDto,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      status: ApplicationStatus.DRAFT,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     };
 
     this.applications.push(newApplication);
-    this.logEvent(
+
+    // AUDITORÍA: Registro de creación
+    this.eventsService.createEvent(
       newApplication.id,
-      ApplicationEventType.CREACION,
-      'Se inicializa la solicitud en estado borrador.',
+      ApplicationAction.CREATED,
+      'Ninguno',
+      newApplication.status,
     );
+
     return newApplication;
   }
 
-  // GET /applications
-  findAll(
-    status?: ApplicationStatus,
-    channel?: Channel,
-    search?: string,
-  ): Application[] {
-    let result = this.applications;
+  findAll(filters: FilterApplicationsDto): IApplication[] {
+    let result = [...this.applications];
+    const { status, channel, search } = filters;
 
     if (status) {
       result = result.filter((app) => app.status === status);
@@ -58,140 +55,181 @@ export class ApplicationsService {
       result = result.filter((app) => app.channel === channel);
     }
     if (search) {
-      const query = search.toLowerCase();
+      const searchLower = search.toLowerCase();
       result = result.filter(
         (app) =>
-          app.names.toLowerCase().includes(query) ||
-          app.documentNumber.includes(query),
+          app.documentNumber?.includes(search) ||
+          app.fullName?.toLowerCase().includes(searchLower),
       );
     }
+
     return result;
   }
 
-  // GET /applications/:id
-  findOne(id: string): Application {
-    const app = this.applications.find((a) => a.id === id);
-    if (!app)
+  findOne(id: string): IApplication {
+    const application = this.applications.find((app) => app.id === id);
+    if (!application) {
       throw new NotFoundException(`La solicitud con ID ${id} no existe.`);
-    return app;
+    }
+    return application;
   }
 
-  // PATCH /applications/:id
-  update(id: string, updateDto: UpdateApplicationDto): Application {
+  update(id: string, updateDto: UpdateApplicationDto): IApplication {
+    // 1. Buscamos la solicitud. Si no existe, findOne lanza un NotFoundException
     const application = this.findOne(id);
+    const oldStatus = application.status;
 
+    // 2. REGLA DE NEGOCIO: Bloqueo de edición por estado
+    // Si la solicitud ya fue Finalizada o Abandonada, congelamos los datos.
     if (
       application.status === ApplicationStatus.FINALIZED ||
       application.status === ApplicationStatus.ABANDONED
     ) {
       throw new BadRequestException(
-        'No se puede modificar una solicitud finalizada o abandonada.',
+        `No es posible modificar la información. La solicitud se encuentra en estado: ${application.status}`,
       );
     }
 
     Object.assign(application, updateDto);
-    application.updatedAt = new Date();
+    application.updatedAt = Date.now();
 
-    this.logEvent(
-      id,
-      ApplicationEventType.ACTUALIZACION,
-      'Se actualizaron los datos complementarios financieros.',
+    // AUDITORÍA: Registro de actualización de datos
+    this.eventsService.createEvent(
+      application.id,
+      ApplicationAction.DATA_UPDATED,
+      oldStatus,
+      application.status,
     );
+
     return application;
   }
 
-  // POST /applications/:id/simulate-offer
-  // Criterio Senior: Permitimos un query param opcional (?forceResult=...) para que el frontend pruebe fácilmente los 3 flujos requeridos.
-  simulateOffer(
-    id: string,
-    forceResult?: 'success' | 'unviable' | 'error',
-  ): SimulationResponse {
-    this.findOne(id); // Valida que exista
+  simulateOffer(id: string) {
+    const application = this.findOne(id);
+    const oldStatus = application.status;
 
-    const mode =
-      forceResult ||
-      ['success', 'unviable', 'error'][Math.floor(Math.random() * 3)];
+    if (!application.income || !application.requestedAmount) {
+      throw new BadRequestException(
+        'Faltan datos financieros (ingresos/monto) para realizar la simulación.',
+      );
+    }
 
-    this.logEvent(
-      id,
-      ApplicationEventType.SIMULACION,
-      `Intento de simulación ejecutado. Resultado simulado: ${mode.toUpperCase()}`,
-    );
+    // ESCENARIO 1: ERROR TÉCNICO TEMPORAL (Monto gatillo: 999999)
+    if (application.requestedAmount === 999999) {
+      throw new InternalServerErrorException(
+        'Error de conexión temporal con el nodo de validación financiera. Por favor, intente más tarde.',
+      );
+    }
 
-    if (mode === 'unviable') {
+    // ESCENARIO 2: RECHAZO / NO VIABLE
+    const effectiveExpenses = application.expenses || 0;
+    const availableCapacity = application.income - effectiveExpenses;
+
+    if (availableCapacity < application.requestedAmount * 0.05) {
+      application.status = ApplicationStatus.NOT_VIABLE;
+      application.updatedAt = Date.now();
+
+      // AUDITORÍA: Registro de rechazo financiero
+      this.eventsService.createEvent(
+        application.id,
+        ApplicationAction.SIMULATION_REJECTED,
+        oldStatus,
+        application.status,
+        'Capacidad de endeudamiento insuficiente según políticas de riesgo.',
+      );
+
       return {
-        status: 'RECHAZADO',
-        code: 'ERR_RISK_PROFILE',
+        viable: false,
+        status: application.status,
         message:
-          'La solicitud no es viable debido a que el nivel de endeudamiento supera los parámetros permitidos por la entidad.',
+          'La solicitud no es viable en este momento debido a que los egresos declarados comprometen la capacidad de pago requerida para el cupo solicitado.',
       };
     }
 
-    if (mode === 'error') {
-      throw new InternalServerErrorException({
-        statusCode: 500,
-        error: 'TechnicalError',
-        message:
-          'Error técnico temporal al conectarse con el sistema de score crediticio. Intente más tarde.',
-      });
-    }
+    // ESCENARIO 3: RESPUESTA EXITOSA (VIABLE) [cite: 30, 65]
+    application.status = ApplicationStatus.VIABLE;
+    application.updatedAt = Date.now();
 
-    // Caso exitoso
+    const monthlyRate = 0.018;
+    const term = application.desiredTerm || 36;
+    const monthlyPayment = Math.round(
+      (application.requestedAmount * monthlyRate) /
+        (1 - Math.pow(1 + monthlyRate, -term)),
+    );
+
+    // AUDITORÍA: Registro de simulación aprobada
+    this.eventsService.createEvent(
+      application.id,
+      ApplicationAction.SIMULATION_SUCCESS,
+      oldStatus,
+      application.status,
+      `Oferta generada por $${application.requestedAmount} a ${term} meses.`,
+    );
+
     return {
-      status: 'APROBADO_PRELIMINAR',
-      approvedAmount: 15000000,
-      approvedTerm: 36,
-      monthlyEstimatedPayment: 480000,
-      interestRate: '1.25% EM',
+      viable: true,
+      status: application.status,
+      offer: {
+        approvedAmount: application.requestedAmount,
+        interestRateEA: '23.87%',
+        monthlyPayment,
+        termMonths: term,
+      },
     };
   }
 
-  // POST /applications/:id/finalize
-  finalize(id: string): Application {
-    const app = this.findOne(id);
-    app.status = ApplicationStatus.FINALIZED;
-    app.updatedAt = new Date();
+  finalize(id: string): IApplication {
+    const application = this.findOne(id);
+    const oldStatus = application.status;
 
-    this.logEvent(
-      id,
-      ApplicationEventType.FINALIZACION,
-      'El usuario aceptó los términos y radicó formalmente la solicitud.',
+    if (application.status !== ApplicationStatus.VIABLE) {
+      throw new BadRequestException(
+        'Solo se pueden finalizar solicitudes que cuenten con una simulación Viable.',
+      );
+    }
+
+    application.status = ApplicationStatus.FINALIZED;
+    application.updatedAt = Date.now();
+
+    // AUDITORÍA: Registro de finalización del proceso
+    this.eventsService.createEvent(
+      application.id,
+      ApplicationAction.FINALIZED,
+      oldStatus,
+      application.status,
     );
-    return app;
+
+    return application;
   }
 
-  // POST /applications/:id/abandon
-  abandon(id: string, abandonDto: AbandonApplicationDto): Application {
-    const app = this.findOne(id);
-    app.status = ApplicationStatus.ABANDONED;
-    app.updatedAt = new Date();
+  abandon(id: string, abandonDto: AbandonApplicationDto): IApplication {
+    const application = this.findOne(id);
+    const oldStatus = application.status;
 
-    this.logEvent(
-      id,
-      ApplicationEventType.ABANDONO,
-      `El proceso fue cancelado por el usuario. Motivo: ${abandonDto.reason}`,
+    if (application.status === ApplicationStatus.FINALIZED) {
+      throw new BadRequestException(
+        'No se puede abandonar una solicitud que ya se encuentra Finalizada.',
+      );
+    }
+
+    application.status = ApplicationStatus.ABANDONED;
+    application.abandonmentReason = abandonDto.abandonmentReason;
+    application.updatedAt = Date.now();
+
+    // AUDITORÍA: Registro de desistimiento con su respectiva nota explicativa
+    this.eventsService.createEvent(
+      application.id,
+      ApplicationAction.ABANDONED,
+      oldStatus,
+      application.status,
+      `Motivo de abandono: ${abandonDto.abandonmentReason}`,
     );
-    return app;
+
+    return application;
   }
 
-  // GET /applications/:id/events
-  getEvents(applicationId: string): ApplicationEvent[] {
-    this.findOne(applicationId); // Valida que exista la solicitud
-    return this.events.filter((e) => e.applicationId === applicationId);
-  }
-
-  // Helper interno de trazabilidad
-  private logEvent(
-    applicationId: string,
-    type: ApplicationEventType,
-    description: string,
-  ) {
-    this.events.push({
-      id: uuidv4(),
-      applicationId,
-      type,
-      description,
-      timestamp: new Date(),
-    });
+  getTimeline(id: string) {
+    this.findOne(id);
+    return this.eventsService.getEventsByApplication(id);
   }
 }
