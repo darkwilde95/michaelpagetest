@@ -10,31 +10,6 @@ import {
 import { DocumentType } from '../interfaces/application.interface';
 
 export class UpdateApplicationDto {
-  @IsEnum(DocumentType, { message: 'El tipo de documento no es válido' })
-  @IsOptional()
-  documentType?: DocumentType;
-
-  @IsString()
-  @IsOptional()
-  documentNumber?: string;
-
-  @IsString()
-  @IsOptional()
-  fullName?: string;
-
-  @IsString()
-  @IsOptional()
-  phoneNumber?: string;
-
-  @IsEmail({}, { message: 'El formato del correo electrónico no es válido' })
-  @IsOptional()
-  email?: string;
-
-  @IsString()
-  @IsOptional()
-  city?: string;
-
-  // --- Datos Complementarios y Financieros ---
   @IsNumber()
   @Min(0, { message: 'Los ingresos no pueden ser negativos' })
   @IsOptional()
@@ -58,10 +33,4 @@ export class UpdateApplicationDto {
   @IsString()
   @IsOptional()
   loanPurpose?: string;
-
-  @IsBoolean({
-    message: 'Debe especificar la aceptación de tratamiento de datos',
-  })
-  @IsOptional()
-  dataProcessingAccepted?: boolean;
 }

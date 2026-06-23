@@ -26,7 +26,14 @@ export class ApplicationsService {
     const newApplication: IApplication = {
       id: uuidv4(),
       ...createDto,
+      income: 0,
+      expenses: 0,
+      desiredTerm: 0,
+      loanPurpose: '',
+      requestedAmount: 0,
+      abandonmentReason: '',
       status: ApplicationStatus.DRAFT,
+
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -56,11 +63,13 @@ export class ApplicationsService {
     }
     if (search) {
       const searchLower = search.toLowerCase();
-      result = result.filter(
-        (app) =>
-          app.documentNumber?.includes(search) ||
-          app.fullName?.toLowerCase().includes(searchLower),
-      );
+      result = result
+        .filter(
+          (app) =>
+            app.documentNumber?.includes(search) ||
+            app.fullName?.toLowerCase().includes(searchLower),
+        )
+        .sort((a, b) => b.updatedAt - a.updatedAt);
     }
 
     return result;
@@ -90,7 +99,7 @@ export class ApplicationsService {
       );
     }
 
-    Object.assign(application, updateDto);
+    Object.assign(application, { ...application, ...updateDto });
     application.updatedAt = Date.now();
 
     // AUDITORÍA: Registro de actualización de datos

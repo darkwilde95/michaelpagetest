@@ -40,7 +40,6 @@ export interface IApplication {
   requestedAmount?: number;
   desiredTerm?: number;
   loanPurpose?: string;
-  dataProcessingAccepted?: boolean;
 
   createdAt: number;
   updatedAt: number;

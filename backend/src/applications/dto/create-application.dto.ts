@@ -14,7 +14,7 @@ export class CreateApplicationDto {
   @IsEnum(CustomerChannel, {
     message: 'El canal debe ser Autogestionado o Asistido',
   })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'El canal debe ser elegido' })
   channel!: CustomerChannel;
 
   @ValidateIf((o) => o.channel === CustomerChannel.ASSISTED)
