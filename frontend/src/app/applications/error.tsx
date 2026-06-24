@@ -16,6 +16,7 @@ export default function ErrorApplication({
 
   useEffect(() => {
     console.error("Application Error Boundary:", error);
+    document.title = "Error Interno del Aplicativo | NexaCredit";
   }, [error]);
 
   return (
@@ -53,13 +54,13 @@ export default function ErrorApplication({
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <button
             onClick={() => reset()}
-            className="px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+            className="px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
           >
             Reintentar Acción
           </button>
           <Link
             href="/applications"
-            className="px-5 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors text-center"
+            className="px-5 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-300 focus-visible:outline-offset-2"
           >
             Ir al Listado
           </Link>
@@ -68,14 +69,21 @@ export default function ErrorApplication({
         <div className="pt-4 border-t border-gray-100 text-left">
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1 hover:text-gray-600 focus:outline-none"
+            className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1 hover:text-gray-600 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-400 rounded"
             aria-expanded={showDetails}
+            aria-controls="error-details-panel"
           >
             {showDetails ? "▼ Ocultar" : "▶ Mostrar"} detalles de soporte
           </button>
 
           {showDetails && (
-            <div className="mt-2 bg-gray-50 p-3 rounded-lg border border-gray-200/60 font-mono text-[10px] text-gray-600 space-y-1.5 overflow-x-auto">
+            <div
+              id="error-details-panel"
+              tabIndex={0}
+              role="region"
+              aria-label="Detalles técnicos del error"
+              className="mt-2 bg-gray-50 p-3 rounded-lg border border-gray-200/60 font-mono text-[10px] text-gray-600 space-y-1.5 overflow-x-auto focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-300"
+            >
               <p>
                 <span className="font-bold text-gray-400">Mensaje:</span>{" "}
                 {error.message ||

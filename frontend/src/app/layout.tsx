@@ -5,7 +5,7 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: "swap", // Optimiza la velocidad de renderizado de texto (evita FOIT)
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -14,7 +14,6 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-// 1. Metadata Global unificada bajo la marca NexaCredit
 export const metadata: Metadata = {
   title: {
     template: "%s | NexaCredit",
@@ -22,12 +21,20 @@ export const metadata: Metadata = {
   },
   description:
     "Simula y solicita tu crédito de libre destino 100% digital. Respuesta inmediata y desembolso seguro.",
-  robots: "index, follow",
+  robots: { index: true, follow: true },
+  applicationName: "NexaCredit",
+  authors: [{ name: "NexaCredit Architecture Team" }],
+  generator: "Next.js",
+  keywords: [
+    "crédito accesible",
+    "financiamiento digital",
+    "banca accesible",
+    "solicitud de crédito",
+  ],
 };
 
-// 2. Viewport separado (Buenas prácticas actualizadas de Next.js)
 export const viewport: Viewport = {
-  themeColor: "#2563eb", // Azul corporativo base de la marca
+  themeColor: "#2563eb",
   width: "device-width",
   initialScale: 1,
 };
@@ -40,9 +47,15 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-white text-gray-900 flex flex-col font-sans selection:bg-blue-500/10 selection:text-blue-600">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-blue-600 focus:text-white focus:text-xs focus:font-bold focus:rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transition-all"
+        >
+          Saltar al contenido principal
+        </a>
         {children}
       </body>
     </html>

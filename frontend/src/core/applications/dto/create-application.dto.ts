@@ -4,12 +4,35 @@ import { selectChannelSchema } from "./select-channel.dto";
 
 export const createApplicationSchema = selectChannelSchema
   .extend({
-    documentType: z.enum(DocumentType),
-    documentNumber: z.string().min(1, "El número de documento es obligatorio"),
-    fullName: z.string().min(1, "El nombre completo es obligatorio"),
-    phoneNumber: z.string().min(1, "El numero es obligatorio"),
-    email: z.email("El correo electrónico no es válido"),
-    city: z.string().min(1, "La ciudad es obligatoria"),
+    documentType: z.nativeEnum(DocumentType, {
+      error: "El tipo de documento seleccionado no es válido.",
+    }),
+    documentNumber: z
+      .string({ message: "El número de documento es obligatorio." })
+      .min(1, {
+        message: "El número de documento de identidad es obligatorio.",
+      }),
+    fullName: z
+      .string({ message: "El nombre completo es obligatorio." })
+      .min(1, {
+        message:
+          "Debe ingresar su nombre completo tal como aparece en su documento.",
+      }),
+    phoneNumber: z
+      .string({ message: "El número de teléfono es obligatorio." })
+      .min(1, {
+        message:
+          "El número de contacto celular es requerido para la validación.",
+      }),
+    email: z
+      .string({ message: "El correo electrónico es obligatorio." })
+      .email({
+        message:
+          "La dirección de correo electrónico ingresada no tiene un formato válido.",
+      }),
+    city: z.string({ message: "La ciudad es obligatoria." }).min(1, {
+      message: "La ciudad de residencia es obligatoria.",
+    }),
   })
   .refine(
     (data) => {
@@ -22,7 +45,8 @@ export const createApplicationSchema = selectChannelSchema
       return true;
     },
     {
-      message: "El id del asesor es obligatorio cuando el canal es asistido",
+      message:
+        "El código de identificación del asesor es obligatorio para el canal asistido.",
       path: ["advisorId"],
     },
   );

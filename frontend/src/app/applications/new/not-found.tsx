@@ -3,8 +3,7 @@ import Link from "next/link";
 export default function ApplicationNotFound() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4 py-10">
-      <div className="max-w-md w-full bg-white border border-gray-100 shadow-xl rounded-2xl p-8 text-center space-y-6 animate-fade-in">
-        {/* Icono de Alerta de Negocio (Documento no encontrado) */}
+      <div className="max-w-md w-full bg-white border border-gray-100 shadow-xl rounded-2xl p-6 sm:p-8 text-center space-y-6 animate-fade-in">
         <div
           className="w-14 h-14 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner"
           aria-hidden="true"
@@ -24,7 +23,6 @@ export default function ApplicationNotFound() {
           </svg>
         </div>
 
-        {/* Mensaje de Contexto */}
         <div className="space-y-2">
           <h1 className="text-xl font-black text-gray-950 tracking-tight">
             No se encontró la solicitud
@@ -35,42 +33,45 @@ export default function ApplicationNotFound() {
           </p>
         </div>
 
-        {/* Panel de Alternativas de Recuperación (UX Resiliente) */}
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/50 text-left space-y-2.5">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block px-1">
             Opciones disponibles
           </span>
 
           <div className="flex flex-col gap-2">
-            {/* Opción 1: Limpia el parámetro corrupto y le permite empezar de cero en la misma ruta */}
             <Link
               href="/applications/new"
-              className="flex items-center justify-between text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-200 shadow-xs hover:border-blue-500 hover:text-blue-600 transition-all group"
+              className="flex items-center justify-between text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-200 shadow-xs hover:border-blue-500 hover:text-blue-600 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               <span>Iniciar una nueva solicitud</span>
-              <span className="text-gray-400 group-hover:translate-x-0.5 transition-transform">
+              <span
+                className="text-gray-400 group-hover:translate-x-0.5 transition-transform"
+                aria-hidden="true"
+              >
                 →
               </span>
             </Link>
 
-            {/* Opción 2: Regresar a la mesa de control */}
             <Link
               href="/applications"
-              className="flex items-center justify-between text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-200 shadow-xs hover:border-blue-500 hover:text-blue-600 transition-all group"
+              className="flex items-center justify-between text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-200 shadow-xs hover:border-blue-500 hover:text-blue-600 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               <span>Volver al panel principal</span>
-              <span className="text-gray-400 group-hover:translate-x-0.5 transition-transform">
+              <span
+                className="text-gray-400 group-hover:translate-x-0.5 transition-transform"
+                aria-hidden="true"
+              >
                 →
               </span>
             </Link>
           </div>
         </div>
 
-        {/* Tag de Soporte Técnico (Suma puntos en Observabilidad y Trazabilidad) */}
+        {/* Tag de Soporte Técnico */}
         <div className="pt-2">
           <p className="text-[10px] text-gray-400 font-medium">
             Código de referencia:{" "}
-            <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
+            <span className="font-mono bg-gray-100 px-1.5 py-0.5 border border-gray-200/40 rounded text-gray-600">
               ERR_CREDIT_ID_NOT_FOUND
             </span>
           </p>

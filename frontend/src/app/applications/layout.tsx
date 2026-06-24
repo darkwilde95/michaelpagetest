@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
 
-// Metadata profesional con la nueva identidad ficticia
 export const metadata: Metadata = {
   title: "Portal de Originación | NexaCredit",
   description:
@@ -15,19 +14,12 @@ export default function ApplicationsLayout({
 }>) {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50/60 text-gray-900 antialiased">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold z-50 shadow-md focus:outline-none"
-      >
-        Saltar al contenido principal
-      </a>
-
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200/80 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="flex items-center gap-2.5 group focus:outline-2 focus:outline-blue-500 focus:outline-offset-4 rounded-xl"
+              className="flex items-center gap-2.5 group rounded-xl focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-4"
               aria-label="NexaCredit - Inicio de Mesa de Control"
             >
               <div className="w-9 w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:bg-blue-700 transition-colors">
@@ -39,6 +31,7 @@ export default function ApplicationsLayout({
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  aria-hidden="true"
                 >
                   <path d="M12 2L2 7l10 5 10-5-10-5z" />
                   <path d="M2 17l10 5 10-5" />

@@ -3,21 +3,26 @@ import { CustomerChannel } from "../types";
 
 export const selectChannelSchema = z
   .object({
-    channel: z.enum(CustomerChannel),
-    advisorId: z.string(),
+    channel: z.enum(CustomerChannel, {
+      error: "El canal seleccionado no corresponde a un entorno autorizado.",
+    }),
+
+    advisorId: z
+      .string({
+        message: "El identificador del asesor debe ser una cadena de texto.",
+      })
+      .default(""),
   })
   .refine(
     (data) => {
-      if (
-        data.channel === CustomerChannel.ASSISTED &&
-        (!data.advisorId || data.advisorId.trim() === "")
-      ) {
-        return false;
+      if (data.channel === CustomerChannel.ASSISTED) {
+        return !!data.advisorId && data.advisorId.trim() !== "";
       }
       return true;
     },
     {
-      message: "El id del asesor es obligatorio cuando el canal es asistido",
+      message:
+        "El código de identificación del asesor es obligatorio para el canal asistido.",
       path: ["advisorId"],
     },
   );

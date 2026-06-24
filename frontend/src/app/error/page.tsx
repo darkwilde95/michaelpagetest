@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
 function ErrorContent() {
   const router = useRouter();
@@ -11,8 +11,16 @@ function ErrorContent() {
     "No pudimos procesar la solicitud en nuestros sistemas transaccionales.";
   const code = searchParams.get("code") || "ERR_INTERNAL_BFF_500";
 
+  useEffect(() => {
+    document.title = "Error en el Sistema | NexaCredit";
+  }, []);
+
   return (
-    <div className="max-w-md mx-auto my-12 p-8 bg-white border border-gray-200/80 shadow-xl rounded-2xl text-center space-y-6 animate-fade-in">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="max-w-md mx-auto my-12 p-8 bg-white border border-gray-200/80 shadow-xl rounded-2xl text-center space-y-6 animate-fade-in focus:outline-none"
+    >
       <div
         className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner"
         aria-hidden="true"
@@ -33,9 +41,9 @@ function ErrorContent() {
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-lg font-black text-gray-950 tracking-tight">
-          Sistema Temporalmente No Disponible
-        </h3>
+        <h1 className="text-lg font-black text-gray-950 tracking-tight">
+          Sistema Temporadamente No Disponible
+        </h1>
         <p className="text-xs text-gray-500 leading-relaxed max-w-xs mx-auto font-medium">
           {message}
         </p>
@@ -43,14 +51,14 @@ function ErrorContent() {
 
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <button
-          onClick={() => router.back()} // Opción inteligente: Regresa al paso exacto donde falló
-          className="w-full sm:w-1/2 order-2 sm:order-1 px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-xs cursor-pointer"
+          onClick={() => router.back()}
+          className="w-full sm:w-1/2 order-2 sm:order-1 px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-xs cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
         >
           Reintentar Operación
         </button>
         <button
           onClick={() => router.push("/applications")}
-          className="w-full sm:w-1/2 order-1 sm:order-2 px-4 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors"
+          className="w-full sm:w-1/2 order-1 sm:order-2 px-4 py-2.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-300 focus-visible:outline-offset-2"
         >
           Ir al Panel Principal
         </button>
@@ -64,7 +72,7 @@ function ErrorContent() {
           </span>
         </p>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -72,7 +80,11 @@ export default function GlobalApplicationErrorPage() {
   return (
     <Suspense
       fallback={
-        <div className="text-center text-xs text-gray-400 font-medium py-12">
+        <div
+          className="text-center text-xs text-gray-400 font-medium py-12"
+          role="status"
+          aria-live="polite"
+        >
           Cargando trazabilidad del incidente...
         </div>
       }

@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Inicio",
+  description:
+    "Solicita tu crédito de libre destino 100% digital en minutos. Evaluación inmediata, segura y sin fricciones con NexaCredit.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default function LandingPage() {
   async function handleSearchAction(formData: FormData) {
@@ -13,7 +23,11 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto my-12 lg:my-20 space-y-16 px-4 animate-fade-in">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="max-w-5xl mx-auto my-12 lg:my-20 space-y-16 px-4 animate-fade-in focus:outline-none"
+    >
       <div className="text-center space-y-4 max-w-2xl mx-auto">
         <div className="inline-flex items-center gap-1.5 bg-blue-50/80 border border-blue-100 px-3 py-1 rounded-full text-[10px] font-bold text-blue-700 uppercase tracking-wider select-none">
           Plataforma de Originación Oficial
@@ -103,8 +117,12 @@ export default function LandingPage() {
 
           <form action={handleSearchAction} className="w-full space-y-2">
             <div className="flex gap-2">
+              <label htmlFor="applicationId" className="sr-only">
+                Identificador único de la solicitud (UUID)
+              </label>
               <input
                 type="text"
+                id="applicationId"
                 name="applicationId"
                 required
                 placeholder="Ingresa el UUID de la solicitud"
@@ -135,9 +153,9 @@ export default function LandingPage() {
           href="/applications"
           className="px-4 py-2.5 border border-gray-200 text-gray-700 bg-white text-xs font-bold rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all shadow-xs whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-300"
         >
-          Acceder como Administrador →
+          Acceder como Administrador <span aria-hidden="true">→</span>
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

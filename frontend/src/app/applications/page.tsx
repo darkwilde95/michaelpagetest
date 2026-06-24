@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import Link from "next/link";
 import { ApplicationService } from "@/core/applications/service";
 import {
@@ -13,6 +14,12 @@ interface AdminPageProps {
     channel?: string;
   }>;
 }
+
+export const metadata: Metadata = {
+  title: "Mesa de Control",
+  description:
+    "Panel de administración para el seguimiento, control y auditoría de solicitudes de crédito.",
+};
 
 export default async function AdminApplicationsPage({
   searchParams,
@@ -30,8 +37,8 @@ export default async function AdminApplicationsPage({
   }
 
   return (
-    <div className="max-w-6xl mx-auto my-4 p-6 bg-white shadow-sm rounded-xl border border-gray-100 space-y-6">
-      <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Mesa de Control</h1>
           <p className="text-xs text-gray-500">
@@ -41,9 +48,12 @@ export default async function AdminApplicationsPage({
         </div>
         <Link
           href="/applications/new"
-          className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
         >
-          + Nueva Solicitud
+          <span aria-hidden="true" className="mr-1">
+            +
+          </span>{" "}
+          Nueva Solicitud
         </Link>
       </div>
 
@@ -52,26 +62,34 @@ export default async function AdminApplicationsPage({
         className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200"
       >
         <div className="flex flex-col space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">
+          <label
+            htmlFor="search-input"
+            className="text-[10px] font-bold text-gray-500 uppercase"
+          >
             Buscar Cliente / Documento
           </label>
           <input
             type="text"
+            id="search-input"
             name="search"
             defaultValue={filters.search || ""}
             placeholder="Ej: Raul Coral o 1015..."
-            className="p-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-blue-500"
+            className="p-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
 
         <div className="flex flex-col space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">
+          <label
+            htmlFor="status-select"
+            className="text-[10px] font-bold text-gray-500 uppercase"
+          >
             Filtrar por Estado
           </label>
           <select
+            id="status-select"
             name="status"
             defaultValue={filters.status || ""}
-            className="p-2 border border-gray-300 rounded-lg text-xs bg-white"
+            className="p-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-blue-500 transition-colors"
           >
             <option value="">Todos los estados</option>
             {Object.values(ApplicationStatus).map((value) => (
@@ -83,13 +101,17 @@ export default async function AdminApplicationsPage({
         </div>
 
         <div className="flex flex-col space-y-1">
-          <label className="text-[10px] font-bold text-gray-500 uppercase">
+          <label
+            htmlFor="channel-select"
+            className="text-[10px] font-bold text-gray-500 uppercase"
+          >
             Filtrar por Canal
           </label>
           <select
+            id="channel-select"
             name="channel"
             defaultValue={filters.channel || ""}
-            className="p-2 border border-gray-300 rounded-lg text-xs bg-white"
+            className="p-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-blue-500 transition-colors"
           >
             <option value="">Todos los canales</option>
             <option value={CustomerChannel.SELF_MANAGED}>
@@ -104,23 +126,40 @@ export default async function AdminApplicationsPage({
         <div className="flex items-end">
           <button
             type="submit"
-            className="w-full py-2 bg-gray-800 text-white text-xs font-bold rounded-lg hover:bg-gray-900 transition-colors"
+            className="w-full py-2 bg-gray-800 text-white text-xs font-bold rounded-lg hover:bg-gray-900 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-800 focus-visible:outline-offset-2 cursor-pointer"
           >
             Aplicar Filtros
           </button>
         </div>
       </form>
 
-      <div className="overflow-x-auto border border-gray-200 rounded-xl">
+      <div
+        className="overflow-x-auto border border-gray-200 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        tabIndex={0}
+        role="region"
+        aria-label="Listado de solicitudes de crédito"
+      >
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50/70 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-              <th className="p-4">Cliente / Documento</th>
-              <th className="p-4">Canal</th>
-              <th className="p-4">Monto Solicitado</th>
-              <th className="p-4">Estado</th>
-              <th className="p-4">Fecha de Creación</th>
-              <th className="p-4 text-right">Acciones</th>
+              <th className="p-4" scope="col">
+                Cliente / Documento
+              </th>
+              <th className="p-4" scope="col">
+                Canal
+              </th>
+              <th className="p-4" scope="col">
+                Monto Solicitado
+              </th>
+              <th className="p-4" scope="col">
+                Estado
+              </th>
+              <th className="p-4" scope="col">
+                Fecha de Creación
+              </th>
+              <th className="p-4 text-right" scope="col">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="text-xs text-gray-600 divide-y divide-gray-100">
@@ -163,13 +202,13 @@ export default async function AdminApplicationsPage({
                   <td className="p-4">
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        app.status === "Finalizada"
+                        app.status === ApplicationStatus.FINALIZED
                           ? "bg-green-50 text-green-700"
-                          : app.status === "Borrador"
+                          : app.status === ApplicationStatus.DRAFT
                             ? "bg-gray-100 text-gray-600"
-                            : app.status === "Viable"
+                            : app.status === ApplicationStatus.VIABLE
                               ? "bg-blue-50 text-blue-700"
-                              : app.status === "No Viable"
+                              : app.status === ApplicationStatus.NOT_VIABLE
                                 ? "bg-red-50 text-red-700"
                                 : "bg-amber-50 text-amber-700"
                       }`}
@@ -180,31 +219,36 @@ export default async function AdminApplicationsPage({
                   <td className="p-4 text-gray-400 font-mono">
                     {new Date(app.createdAt).toLocaleDateString("es-CO")}
                   </td>
-                  <td className="p-4 text-right flex-col">
-                    {app.status === ApplicationStatus.DRAFT ||
-                    app.status === ApplicationStatus.VIABLE ? (
-                      <>
-                        <Link
-                          href={`/applications/new?id=${app.id}`}
-                          className="text-blue-600 font-semibold hover:underline block mb-2"
-                        >
-                          Retomar
-                        </Link>
+                  <td className="p-4 text-right">
+                    <div className="flex flex-col items-end gap-1.5">
+                      {app.status === ApplicationStatus.DRAFT ||
+                      app.status === ApplicationStatus.VIABLE ? (
+                        <>
+                          <Link
+                            href={`/applications/new?id=${app.id}`}
+                            className="text-blue-600 font-semibold hover:underline block focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 rounded"
+                            aria-label={`Retomar solicitud de ${app.fullName || "N/A"}`}
+                          >
+                            Retomar
+                          </Link>
+                          <Link
+                            href={`/applications/${app.id}`}
+                            className="text-gray-600 font-semibold hover:underline block focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-600 rounded"
+                            aria-label={`Ver detalle de la solicitud de ${app.fullName || "N/A"}`}
+                          >
+                            Ver Detalle
+                          </Link>
+                        </>
+                      ) : (
                         <Link
                           href={`/applications/${app.id}`}
-                          className="text-gray-600 font-semibold hover:underline block"
+                          className="text-gray-600 font-semibold hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-600 rounded"
+                          aria-label={`Ver detalle de la solicitud de ${app.fullName || "N/A"}`}
                         >
                           Ver Detalle
                         </Link>
-                      </>
-                    ) : (
-                      <Link
-                        href={`/applications/${app.id}`}
-                        className="text-gray-600 font-semibold hover:underline"
-                      >
-                        Ver Detalle
-                      </Link>
-                    )}
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
