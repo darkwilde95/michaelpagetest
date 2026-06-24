@@ -23,23 +23,26 @@ export interface IApplication {
   id: string;
   channel: CustomerChannel;
   advisorId?: string;
-  status: ApplicationStatus;
-  abandonmentReason?: string;
 
   // Basic Data
-  documentType?: DocumentType;
-  documentNumber?: string;
-  fullName?: string;
-  phoneNumber?: string;
-  email?: string;
-  city?: string;
+  documentType: DocumentType;
+  documentNumber: string;
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  city: string;
 
   // Complementary Data
+  status: ApplicationStatus;
   income?: number;
   expenses?: number;
-  requestedAmount?: number;
-  desiredTerm?: number;
+  abandonmentReason?: string;
   loanPurpose?: string;
+  requestedAmount?: number;
+  interestRateEA?: number;
+  monthlyPayment?: number;
+  desiredTerm?: number;
+  loanStatusMessage?: string;
 
   createdAt: number;
   updatedAt: number;

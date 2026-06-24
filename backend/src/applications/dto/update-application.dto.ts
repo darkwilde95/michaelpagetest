@@ -1,11 +1,9 @@
 import {
   IsNumber,
   IsString,
-  IsBoolean,
   IsOptional,
   Min,
-  IsEmail,
-  IsEnum,
+  IsPositive,
 } from 'class-validator';
 import { DocumentType } from '../interfaces/application.interface';
 

@@ -31,6 +31,8 @@ export class ApplicationsService {
       desiredTerm: 0,
       loanPurpose: '',
       requestedAmount: 0,
+      interestRateEA: 0,
+      monthlyPayment: 0,
       abandonmentReason: '',
       status: ApplicationStatus.DRAFT,
 
@@ -99,7 +101,12 @@ export class ApplicationsService {
       );
     }
 
-    Object.assign(application, { ...application, ...updateDto });
+    Object.assign(application, {
+      ...application,
+      ...updateDto,
+      interestRateEA: 0,
+      monthlyPayment: 0,
+    });
     application.updatedAt = Date.now();
 
     // AUDITORÍA: Registro de actualización de datos
@@ -117,6 +124,9 @@ export class ApplicationsService {
     const application = this.findOne(id);
     const oldStatus = application.status;
 
+    if (application.status !== ApplicationStatus.DRAFT) return application;
+
+    console.log('INTENTANDO');
     if (!application.income || !application.requestedAmount) {
       throw new BadRequestException(
         'Faltan datos financieros (ingresos/monto) para realizar la simulación.',
@@ -137,6 +147,8 @@ export class ApplicationsService {
     if (availableCapacity < application.requestedAmount * 0.05) {
       application.status = ApplicationStatus.NOT_VIABLE;
       application.updatedAt = Date.now();
+      application.loanStatusMessage =
+        'La solicitud no es viable en este momento debido a que los egresos declarados comprometen la capacidad de pago requerida para el cupo solicitado.';
 
       // AUDITORÍA: Registro de rechazo financiero
       this.eventsService.createEvent(
@@ -147,15 +159,10 @@ export class ApplicationsService {
         'Capacidad de endeudamiento insuficiente según políticas de riesgo.',
       );
 
-      return {
-        viable: false,
-        status: application.status,
-        message:
-          'La solicitud no es viable en este momento debido a que los egresos declarados comprometen la capacidad de pago requerida para el cupo solicitado.',
-      };
+      return application;
     }
 
-    // ESCENARIO 3: RESPUESTA EXITOSA (VIABLE) [cite: 30, 65]
+    // ESCENARIO 3: RESPUESTA EXITOSA (VIABLE)
     application.status = ApplicationStatus.VIABLE;
     application.updatedAt = Date.now();
 
@@ -175,16 +182,10 @@ export class ApplicationsService {
       `Oferta generada por $${application.requestedAmount} a ${term} meses.`,
     );
 
-    return {
-      viable: true,
-      status: application.status,
-      offer: {
-        approvedAmount: application.requestedAmount,
-        interestRateEA: '23.87%',
-        monthlyPayment,
-        termMonths: term,
-      },
-    };
+    application.interestRateEA = 23.87;
+    application.monthlyPayment = monthlyPayment;
+    application.desiredTerm = term;
+    return application;
   }
 
   finalize(id: string): IApplication {
@@ -197,7 +198,10 @@ export class ApplicationsService {
       );
     }
 
-    application.status = ApplicationStatus.FINALIZED;
+    application.status =
+      application.advisorId && application.advisorId !== ''
+        ? ApplicationStatus.FINALIZED
+        : ApplicationStatus.PENDING_VALIDATION;
     application.updatedAt = Date.now();
 
     // AUDITORÍA: Registro de finalización del proceso
