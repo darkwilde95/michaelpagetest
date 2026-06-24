@@ -4,7 +4,11 @@ import { ApplicationService } from "@/core/applications/service";
 import { ApplicationStatus, IApplication } from "@/core/applications/types";
 import { RefObject, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { finalizeCreditAction } from "@/actions/applications.action";
+import {
+  finalizeCreditAction,
+  simulateOfferAction,
+} from "@/actions/applications.action";
+import { useApplicationError } from "@/hooks/useApplicationError";
 
 interface SimulationResultStepProps {
   applicationCurrentData: RefObject<Partial<IApplication>>;
@@ -18,21 +22,44 @@ export function SimulationResultStep({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingAction, setIsLoadingAction] = useState<boolean>(false);
+  const { captureAndRedirect } = useApplicationError();
+
   const simulateAction = async (id: string) => {
-    const response = await ApplicationService.simulateOffer(id);
-    applicationCurrentData.current = {
-      ...applicationCurrentData.current,
-      ...response,
-    };
-    setIsLoading(false);
+    setIsLoading(true);
+    try {
+      const response = await simulateOfferAction(id);
+
+      if (response && response.success) {
+        applicationCurrentData.current = {
+          ...applicationCurrentData.current,
+          ...response.data,
+        };
+        setIsLoading(false);
+      } else {
+        captureAndRedirect(response);
+      }
+    } catch (error) {
+      captureAndRedirect(error);
+    }
   };
 
   const finalizeAction = async () => {
     setIsLoadingAction(true);
-    const res = await finalizeCreditAction(applicationCurrentData.current.id!);
-    console.log(res);
-    setIsLoadingAction(false);
-    router.push(`/applications/${applicationCurrentData.current.id}/success`);
+    try {
+      const response = await finalizeCreditAction(
+        applicationCurrentData.current.id!,
+      );
+      if (response && response.success) {
+        setIsLoadingAction(false);
+        router.push(
+          `/applications/${applicationCurrentData.current.id}/success`,
+        );
+      } else {
+        captureAndRedirect(response);
+      }
+    } catch (error) {
+      captureAndRedirect(error);
+    }
   };
 
   useEffect(() => {
@@ -56,36 +83,26 @@ export function SimulationResultStep({
 
   if (applicationCurrentData.current.status === ApplicationStatus.NOT_VIABLE) {
     return (
-      <>
+      <div className="p-6 bg-red-50 rounded-xl border border-red-200 text-center space-y-4">
+        <div className="text-3xl">❌</div>
+        <h3 className="text-lg font-bold text-red-800">Solicitud No Viable</h3>
+        <p className="text-sm text-red-700 max-w-md mx-auto leading-relaxed">
+          {applicationCurrentData.current.loanStatusMessage}
+        </p>
+        <p className="text-xs text-gray-500">
+          Puedes intentar una nueva solicitud en 30 días con una distribución de
+          egresos diferente o un menor monto solicitado.
+        </p>
         <button
-          onClick={() => simulateAction(applicationCurrentData.current.id!)}
+          onClick={() => router.push("/applications")}
+          className="w-full py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 transition-colors"
         >
-          TEST
+          Salir del Proceso
         </button>
-        <div className="p-6 bg-red-50 rounded-xl border border-red-200 text-center space-y-4">
-          <div className="text-3xl">❌</div>
-          <h3 className="text-lg font-bold text-red-800">
-            Solicitud No Viable
-          </h3>
-          <p className="text-sm text-red-700 max-w-md mx-auto leading-relaxed">
-            {applicationCurrentData.current.loanStatusMessage}
-          </p>
-          <p className="text-xs text-gray-500">
-            Puedes intentar una nueva solicitud en 30 días con una distribución
-            de egresos diferente o un menor monto solicitado.
-          </p>
-          <button
-            onClick={() => router.push("/applications")}
-            className="w-full py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 transition-colors"
-          >
-            Salir del Proceso
-          </button>
-        </div>
-      </>
+      </div>
     );
   }
 
-  // CASO C: APROBADO CON ÉXITO (VIABLE)
   if (applicationCurrentData.current.status === ApplicationStatus.VIABLE) {
     return (
       <div className="space-y-6">
@@ -151,7 +168,7 @@ export function SimulationResultStep({
             disabled={isLoadingAction}
             className="w-2/3 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 text-sm transition-colors shadow-sm"
           >
-            {isLoading ? "Confirmando..." : "Aceptar y Finalizar Crédito"}
+            {isLoadingAction ? "Confirmando..." : "Aceptar y Finalizar Crédito"}
           </button>
         </div>
       </div>

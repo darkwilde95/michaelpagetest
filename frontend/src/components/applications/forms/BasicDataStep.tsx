@@ -20,6 +20,7 @@ import {
 } from "@/core/applications/dto/create-application.dto";
 import { formatValidationErrors } from "@/core/utils/formatValidationErrors";
 import { createApplicationAction } from "@/actions/applications.action";
+import { useApplicationError } from "@/hooks/useApplicationError";
 
 interface BasicDataStepProps {
   applicationCurrentData: RefObject<Partial<IApplication>>;
@@ -32,6 +33,7 @@ export function BasicDataStep({
   nextStep,
   setErrors,
 }: BasicDataStepProps) {
+  const { captureAndRedirect } = useApplicationError();
   const clientAction = async (formData: FormData) => {
     const rawData = Object.fromEntries(formData.entries());
     const data = {
@@ -45,13 +47,21 @@ export function BasicDataStep({
       setErrors(formatValidationErrors(result));
     } else {
       setErrors(null);
-      const res = await createApplicationAction(data as CreateApplicationDto);
-      if (res.success) {
-        applicationCurrentData.current = {
-          ...applicationCurrentData.current,
-          ...res.data,
-        };
-        nextStep();
+      try {
+        const response = await createApplicationAction(
+          data as CreateApplicationDto,
+        );
+        if (response && response.success) {
+          applicationCurrentData.current = {
+            ...applicationCurrentData.current,
+            ...response.data,
+          };
+          nextStep();
+        } else {
+          captureAndRedirect(response);
+        }
+      } catch (error) {
+        captureAndRedirect(error);
       }
     }
   };

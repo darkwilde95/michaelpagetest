@@ -2,12 +2,7 @@
 
 import { ApplicationService } from "@/core/applications/service";
 import { ApiError } from "@/core/api/api-client";
-import {
-  CustomerChannel,
-  DocumentType,
-  IApplication,
-  ISimulationResponse,
-} from "@/core/applications/types";
+import { IApplication } from "@/core/applications/types";
 import { ServerActionResponse } from "@/core/api/types";
 import { CreateApplicationDto } from "@/core/applications/dto/create-application.dto";
 import { UpdateApplicationDto } from "@/core/applications/dto/update-application.dto";
@@ -60,14 +55,13 @@ export async function updateApplicationAction(
  */
 export async function simulateOfferAction(
   id: string,
-): Promise<ServerActionResponse<ISimulationResponse>> {
+): Promise<ServerActionResponse<IApplication>> {
   try {
     const result = await ApplicationService.simulateOffer(id);
     return { success: true, data: result };
   } catch (error) {
     console.error(`Error en simulateOfferAction para ID ${id}:`, error);
     if (error instanceof ApiError) {
-      // Devolvemos el status (ej. 500) para que el cliente ejecute la mitigación por alta latencia
       return { success: false, error: error.message, status: error.status };
     }
     return {

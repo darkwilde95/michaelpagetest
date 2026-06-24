@@ -15,11 +15,10 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { SubmitButton } from "./SubmitButton";
-import {
-  abandonCreditAction,
-  updateApplicationAction,
-} from "@/actions/applications.action";
+import { updateApplicationAction } from "@/actions/applications.action";
 import { IApplication } from "@/core/applications/types";
+import { ApiError } from "@/core/api/api-client";
+import { useApplicationError } from "@/hooks/useApplicationError";
 
 interface FinancialDataStepProps {
   applicationCurrentData: RefObject<Partial<IApplication>>;
@@ -41,6 +40,7 @@ export function FinancialDataStep({
   const [requestedAmount, setRequestedAmount] = useState<string>("");
   const [desiredTerm, setDesiredTerm] = useState<string>("12");
   const [loanPurpose, setLoanPurpose] = useState<string>("");
+  const { captureAndRedirect } = useApplicationError();
 
   useEffect(() => {
     setIncome(
@@ -84,11 +84,22 @@ export function FinancialDataStep({
       setErrors(formatValidationErrors(result));
     } else {
       setErrors(null);
-      await updateApplicationAction(applicationCurrentData.current.id!, data!);
-      applicationCurrentData.current = {
-        ...applicationCurrentData.current,
-        ...data,
-      };
+      try {
+        const response = await updateApplicationAction(
+          applicationCurrentData.current.id!,
+          data!,
+        );
+        if (response && response.success) {
+          applicationCurrentData.current = {
+            ...applicationCurrentData.current,
+            ...data,
+          };
+        } else {
+          captureAndRedirect(response);
+        }
+      } catch (error) {
+        captureAndRedirect(error);
+      }
     }
   };
 

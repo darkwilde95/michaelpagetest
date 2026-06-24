@@ -7,6 +7,7 @@ import { formatValidationErrors } from "@/core/utils/formatValidationErrors";
 import { useRouter } from "next/navigation";
 import { Dispatch, RefObject, SetStateAction, useState } from "react";
 import { SubmitButton } from "./SubmitButton";
+import { useApplicationError } from "@/hooks/useApplicationError";
 
 interface AbandonmentStepProps {
   applicationCurrentData: RefObject<Partial<IApplication>>;
@@ -37,6 +38,8 @@ export function AbandonmentStep({
   const router = useRouter();
   const isPostApproval =
     applicationCurrentData.current.status === ApplicationStatus.VIABLE;
+
+  const { captureAndRedirect } = useApplicationError();
   const abandonmentAction = async () => {
     const data = {
       abandonmentReason: selectedReason,
@@ -44,8 +47,19 @@ export function AbandonmentStep({
     const result = abandonApplicationSchema.safeParse(data);
     if (result.success) {
       setErrors(null);
-      await abandonCreditAction(applicationCurrentData.current.id!, data);
-      router.push(`/applications`);
+      try {
+        const response = await abandonCreditAction(
+          applicationCurrentData.current.id!,
+          data,
+        );
+        if (response && response.success) {
+          router.push(`/applications`);
+        } else {
+          captureAndRedirect(response);
+        }
+      } catch (error) {
+        captureAndRedirect(error);
+      }
     } else {
       setErrors(formatValidationErrors(result));
     }
